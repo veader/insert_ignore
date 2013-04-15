@@ -1,0 +1,47 @@
+<html>
+<head>
+  <title>Insert Tool</title>
+  <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.9.0/build/reset/reset-min.css">
+  <style type="text/css" media="screen">
+    html { background-color:#222; }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-weight: 200;
+      line-height: 1.5;
+      color:#BBB;
+    }
+    a { color:#888; }
+    #content { width:800px;margin:0 auto;padding:50px; }
+    .column { width:40%;float:left; }
+    #left_col  { width:300px; }
+    #right_col { padding:10px 0 0 50px; }
+    #logo { width:250px; }
+    .header { margin-bottom:30px; }
+    .header h1 {
+      font-weight:400;font-size:5.0em;
+      text-align:left;
+      line-height:0.9;
+    }
+    .tag { padding-top:10px;font-size:1.3em; }
+    .footer {
+      height:15px;
+      margin-top:10px;
+      font-size:0.7em;
+      color:#777;
+    }
+    .footer a { color:#AAA;text-decoration:none; }
+    .footer a:hover { color:#DDD; }
+    .wide_text { width:80%; }
+  </style>
+</head>
+<body>
+  <div id="content">
+    <div class="header">
+      <h1>insert ignore</h1>
+    </div>
+    <%= yield %>
+    <div class="footer">
+    </div>
+  </div>
+</body>
+</html>
