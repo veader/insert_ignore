@@ -7,5 +7,4 @@ All songs sung by the amazing [Sinatra](http://www.sinatrarb.com).
 
 Needed
 ------
-- Add config.ru
 - Move to a more proper structure
