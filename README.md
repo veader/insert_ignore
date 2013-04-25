@@ -5,6 +5,5 @@ Silly app that will generate insert ignore SQL command given select output.
 
 All songs sung by the amazing [Sinatra](http://www.sinatrarb.com).
 
-Needed
-------
-- Move to a more proper structure
+
+__TODO__  - better structure, etc...
