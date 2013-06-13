@@ -64,5 +64,6 @@ end
 
 def needs_quotes?(value)
   # we don't need to quote if we are NULL or a number
-  !(value.upcase == 'NULL' || value =~ /^[\d\.]*$/)
+  # http://rubular.com/r/G7VjKIwHdD - make sure this doesn't capture IPs
+  !(value.upcase == 'NULL' || value =~ /^\d+\.?\d*$/)
 end
