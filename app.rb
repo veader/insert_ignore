@@ -109,9 +109,6 @@ def process_standard_format(table_name, input)
   end
   # make sure we have the same number of columns and values
   if columns.count != value_rows.first.count
-    logger.info "Columns: #{columns.count}"
-    logger.info "Number of Rows: #{value_rows.count}"
-    logger.info "Values (first row): #{value_rows.first.count}"
     raise 'Column and value counts do not match.'
   end
 
@@ -127,31 +124,21 @@ def find_columns_and_value_rows_standard(input)
 
   # look through input for our columns and values
   input.split("\n").each do |line|
-    logger.info 'processing line...'
     if line =~ /^\+\-/ # skip border rows
       just_in_row = false # reset this
-      logger.info "\tfound row border!"
       next
     end
     if line !~ /^\|/   # skip anything that doesn't begin with "|"
-      logger.info "\tfound line that does not start with |..."
       # if we are in a row, then it may be part of a value with newlines?
       next unless just_in_row
       logger.info "\tmust still be in row... (NEWLINE)"
     end
-
-        # logger.info "\t\tAdding it to last value. (NEWLINES)"
-        # # append to the last value in the last row we were collecting for...
-        # row = value_rows[-1]
-        # row[-1] = row[-1] + "\n" + line
-        # value_rows[-1] = row
 
     row = line.split('|').map { |v| v.strip }
     row.shift if row.first == ''
     row.pop if row.last == ''
 
     if row.first == 'id'
-      logger.info "* Column Row"
       columns = row
       just_in_row = false
     else
@@ -170,7 +157,6 @@ def find_columns_and_value_rows_standard(input)
 
         value_rows[-1] = last_row
       else
-        logger.info "* Normal Row"
         value_rows << row
         just_in_row = true
       end
