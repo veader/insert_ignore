@@ -121,6 +121,7 @@ def find_columns_and_value_rows_standard(input)
   value_rows = []
 
   just_in_row = false
+  in_append_mode = false
 
   # look through input for our columns and values
   input.split("\n").each do |line|
@@ -131,7 +132,11 @@ def find_columns_and_value_rows_standard(input)
     if line !~ /^\|/   # skip anything that doesn't begin with "|"
       # if we are in a row, then it may be part of a value with newlines?
       next unless just_in_row
-      logger.info "\tmust still be in row... (NEWLINE)"
+      # can only get into "append mode" if we were just in a row AND we
+      #    find a line that doesn't start with |
+      in_append_mode = true
+    else
+      in_append_mode = false
     end
 
     row = line.split('|').map { |v| v.strip }
@@ -142,8 +147,7 @@ def find_columns_and_value_rows_standard(input)
       columns = row
       just_in_row = false
     else
-      if just_in_row
-        logger.info "* Append Row"
+      if just_in_row && in_append_mode
         # append this data to the last row we were working on...
         last_row = value_rows[-1]
         raise 'Uh... this should NOT happen' if last_row.empty?
