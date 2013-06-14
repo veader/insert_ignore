@@ -12,7 +12,7 @@ post '/' do
       generate_sql(params[:table_name], params[:select_result])
     rescue Exception => ex
       ex.message
-    end.gsub(/\n/, '<br><br>')
+    end.gsub(/\n/, '<br>')
 
   erb :results
 end
@@ -20,7 +20,7 @@ end
 # ---------------------------------------------------------------------------
 def generate_sql(table_name, input)
   queries = process_input(table_name, input)
-  queries.join("\n")
+  queries.join("\n\n")
 end
 
 def process_input(table_name, input)
@@ -32,10 +32,10 @@ def process_input(table_name, input)
 end
 
 # http://rubular.com/r/8OPeHxco0l
-VERTICAL_LINE_REGEX=/^\s*(.+?)\:\s(.+)$/
+# http://rubular.com/r/OkMs1yvCeZ <- further here...
+VERTICAL_LINE_REGEX=/^\s*(\S+?)\:\s*?(.*?)$/
 
 def in_vertical_format?(input)
-  logger.info 'in_vertical_format?'
   # in the first four lines you should encounter a line that has the format
   input.split("\n")[0,4].detect do |line|
     line =~ VERTICAL_LINE_REGEX
@@ -72,9 +72,10 @@ def process_vertical_format(table_name, input)
       if match = line.match(VERTICAL_LINE_REGEX)
         columns << match.captures[0].strip
         values  << match.captures[1].strip
-      elsif match = line.match(/^\d+\srow in set \([\d\.]+ sec\)/)
-        # http://rubular.com/r/Ua5bIRDhBj
+      elsif match = line.match(/^\d+\srow[s]? in set/)
+        # http://rubular.com/r/6cH9EKHcgf
         # this is the end of the query, ignore this line
+        next
       else
         # if we are here, this "may" be part of a value with newlines in it?
         if !values.last.nil? # is there anything in the last value?
@@ -108,6 +109,9 @@ def process_standard_format(table_name, input)
   end
   # make sure we have the same number of columns and values
   if columns.count != value_rows.first.count
+    logger.info "Columns: #{columns.count}"
+    logger.info "Number of Rows: #{value_rows.count}"
+    logger.info "Values (first row): #{value_rows.first.count}"
     raise 'Column and value counts do not match.'
   end
 
@@ -119,18 +123,57 @@ def find_columns_and_value_rows_standard(input)
   columns    = []
   value_rows = []
 
+  just_in_row = false
+
   # look through input for our columns and values
   input.split("\n").each do |line|
-    next if line =~ /^\+\-/ # skip border rows
-    next if line !~ /^\|/   # skip anything that doesn't begin with "|"
+    logger.info 'processing line...'
+    if line =~ /^\+\-/ # skip border rows
+      just_in_row = false # reset this
+      logger.info "\tfound row border!"
+      next
+    end
+    if line !~ /^\|/   # skip anything that doesn't begin with "|"
+      logger.info "\tfound line that does not start with |..."
+      # if we are in a row, then it may be part of a value with newlines?
+      next unless just_in_row
+      logger.info "\tmust still be in row... (NEWLINE)"
+    end
+
+        # logger.info "\t\tAdding it to last value. (NEWLINES)"
+        # # append to the last value in the last row we were collecting for...
+        # row = value_rows[-1]
+        # row[-1] = row[-1] + "\n" + line
+        # value_rows[-1] = row
 
     row = line.split('|').map { |v| v.strip }
     row.shift if row.first == ''
     row.pop if row.last == ''
+
     if row.first == 'id'
+      logger.info "* Column Row"
       columns = row
+      just_in_row = false
     else
-      value_rows << row
+      if just_in_row
+        logger.info "* Append Row"
+        # append this data to the last row we were working on...
+        last_row = value_rows[-1]
+        raise 'Uh... this should NOT happen' if last_row.empty?
+
+        # append the first bit to our last value (NEWLINE)
+        append_value = row.shift
+        last_row[-1] = last_row[-1] + "\n" + append_value
+
+        # anything else, should be additional values.
+        last_row += row if row.count > 1
+
+        value_rows[-1] = last_row
+      else
+        logger.info "* Normal Row"
+        value_rows << row
+        just_in_row = true
+      end
     end
   end
 
