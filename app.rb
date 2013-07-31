@@ -143,7 +143,9 @@ def find_columns_and_value_rows_standard(input)
     row.shift if row.first == ''
     row.pop if row.last == ''
 
-    if row.first == 'id'
+    # most columns begin with id, although some don't so look for _id...
+    # http://rubular.com/r/vMGZMzHbl9
+    if row.first =~ /[\_]?id/
       columns = row
       just_in_row = false
     else
